@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
 
 type Mode = 'creator' | 'streamer'
-type Hook = { id: string; type: string; text: string }
+type Hook = { id: string; type: string; text: string; score: number }
 type HistoryItem = { hook_text: string; created_at: string; platform: string; niche: string }
 
 const CREATOR_NICHES = ['Personal Finance', 'Fitness', 'Lifestyle', 'Business', 'Creator Economy', 'Gaming', 'Other']
@@ -307,10 +307,19 @@ export default function Generator() {
                       <p className="text-[#9CA3AF] text-xs font-medium uppercase tracking-wider mb-2">
                         Hook {idx + 1} — {hook.type}
                       </p>
-                      <p className="text-white text-base leading-relaxed">
+                      <p className="text-white text-base leading-relaxed mb-3">
                         {displayedText[idx] ?? ''}
                         {!done && <span className="inline-block w-0.5 h-4 bg-white ml-0.5 animate-pulse align-middle" />}
                       </p>
+                      <div className="w-full h-[3px] rounded-[2px] bg-[#222222] overflow-hidden">
+                        <div
+                          className="h-full bg-[#2563EB] rounded-[2px]"
+                          style={{
+                            width: done ? `${hook.score}%` : '0%',
+                            transition: done ? 'width 800ms cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+                          }}
+                        />
+                      </div>
                     </div>
                     <div className="shrink-0 flex items-center gap-2">
                       <button

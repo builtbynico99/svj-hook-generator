@@ -7,19 +7,25 @@ function getAnthropic() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 }
 
-function parseResponse(text: string): { hooks: { type: string; text: string }[]; productInsight: string } {
-  const hooks: { type: string; text: string }[] = []
+function parseResponse(text: string): { hooks: { type: string; text: string; score: number }[]; productInsight: string } {
+  const hooks: { type: string; text: string; score: number }[] = []
   const hookRegex = /HOOK\s+\d+\s*\(([^)]+)\):\s*([\s\S]*?)(?=HOOK\s+\d+|PRODUCT:|$)/gi
   let match
 
   while ((match = hookRegex.exec(text)) !== null) {
     const hookType = match[1].trim()
     const hookText = match[2].trim()
-    if (hookText) hooks.push({ type: hookType, text: hookText })
+    if (hookText) hooks.push({ type: hookType, text: hookText, score: 0 })
   }
 
-  const productMatch = text.match(/PRODUCT:\s*([\s\S]+?)$/i)
+  const productMatch = text.match(/PRODUCT:\s*([\s\S]+?)(?=SCORE\s+1:|$)/i)
   const productInsight = productMatch ? productMatch[1].trim() : ''
+
+  // Parse scores and attach to hooks
+  for (let i = 0; i < hooks.length; i++) {
+    const scoreMatch = text.match(new RegExp(`SCORE\\s+${i + 1}:\\s*(\\d+)`, 'i'))
+    if (scoreMatch) hooks[i].score = Math.min(100, Math.max(0, parseInt(scoreMatch[1], 10)))
+  }
 
   return { hooks, productInsight }
 }
@@ -61,7 +67,7 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabase()
 
-    let savedHooks: { id: string; type: string; text: string }[] = hooks.map((h) => ({ id: '', ...h }))
+    let savedHooks: { id: string; type: string; text: string; score: number }[] = hooks.map((h) => ({ id: '', ...h }))
 
     if (hookInserts.length > 0) {
       const { data } = await supabase.from('hooks').insert(hookInserts).select('id')
