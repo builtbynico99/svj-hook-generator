@@ -8,22 +8,16 @@ export default function Nav() {
           SVJ Media
         </Link>
         <div className="flex items-center gap-6">
-          <Link
-            href="/generator"
-            className="text-[#9CA3AF] text-sm hover:text-white transition-colors"
-          >
+          <Link href="/generator" className="text-[#9CA3AF] text-sm hover:text-white transition-colors">
             Hooks
           </Link>
-          <Link
-            href="/titles"
-            className="text-[#9CA3AF] text-sm hover:text-white transition-colors"
-          >
+          <Link href="/titles" className="text-[#9CA3AF] text-sm hover:text-white transition-colors">
             YT Titles
           </Link>
-          <Link
-            href="/scorer"
-            className="text-[#9CA3AF] text-sm hover:text-white transition-colors"
-          >
+          <Link href="/vault" className="text-[#9CA3AF] text-sm hover:text-white transition-colors">
+            Vault
+          </Link>
+          <Link href="/scorer" className="text-[#9CA3AF] text-sm hover:text-white transition-colors">
             Scorer
           </Link>
         </div>

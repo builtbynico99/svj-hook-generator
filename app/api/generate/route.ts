@@ -60,6 +60,16 @@ export async function POST(req: NextRequest) {
     const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
     const { hooks, productInsight } = parseResponse(rawText)
 
+    // Parse product insight into type + pitch
+    // Expected format: "[Product type]: [one-line pitch]"
+    let productType = ''
+    let productPitch = productInsight
+    const colonIdx = productInsight.indexOf(':')
+    if (colonIdx !== -1) {
+      productType = productInsight.slice(0, colonIdx).trim()
+      productPitch = productInsight.slice(colonIdx + 1).trim()
+    }
+
     // Save hooks to Supabase
     const hookInserts = hooks.map((h) => ({
       user_email: email,
@@ -112,6 +122,16 @@ export async function POST(req: NextRequest) {
         current_streak: newStreak,
       })
       .eq('email', email)
+
+    // Passively save product insight to vault (fire and forget)
+    if (productPitch) {
+      supabase.from('product_vault').insert({
+        user_email: email,
+        product_type: productType,
+        pitch: productPitch,
+        topic,
+      }).then(() => {})
+    }
 
     return NextResponse.json({ hooks: savedHooks, productInsight, streak: newStreak })
   } catch (err: unknown) {
