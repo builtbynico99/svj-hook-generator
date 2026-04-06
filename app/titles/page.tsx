@@ -7,7 +7,7 @@ import Nav from '@/components/Nav'
 type Title = { type: string; text: string }
 
 const NICHES = ['Personal Finance', 'Fitness', 'Lifestyle', 'Business', 'Creator Economy', 'Gaming', 'Other']
-const STYLES = ['Curiosity gap', 'Contrarian', 'Outcome-first', 'Number-driven', 'Bold claim']
+const STYLES = ['Access/Proximity', 'Emotional contradiction', 'Curiosity gap', 'Contrarian', 'Number-driven']
 
 export default function Titles() {
   const router = useRouter()
