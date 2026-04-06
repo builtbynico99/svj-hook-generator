@@ -34,6 +34,7 @@ export default function Generator() {
   const [displayedText, setDisplayedText] = useState<string[]>([])
   const [typingDone, setTypingDone] = useState<boolean[]>([])
   const [showProduct, setShowProduct] = useState(false)
+  const [streak, setStreak] = useState(0)
   const [error, setError] = useState('')
 
   const fetchUser = useCallback(async (userEmail: string) => {
@@ -41,6 +42,7 @@ export default function Generator() {
     if (res.ok) {
       const data = await res.json()
       setTotalGenerations(data.total_generations ?? 0)
+      setStreak(data.current_streak ?? 0)
     }
   }, [])
 
@@ -120,6 +122,7 @@ export default function Generator() {
       setHooks(data.hooks)
       setProductInsight(data.productInsight)
       setTotalGenerations((prev) => prev + 1)
+      if (data.streak) setStreak(data.streak)
       fetchHistory(email)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.')
@@ -152,6 +155,16 @@ export default function Generator() {
 
       {/* pb-24 on mobile to clear the fixed generate bar */}
       <main className="max-w-2xl mx-auto px-4 py-8 sm:py-12 pb-28 md:pb-12">
+
+        {/* Streak pill — top right, shown from day 2 */}
+        {streak >= 2 && (
+          <div className="flex justify-end mb-4">
+            <div className="flex items-center gap-1.5 bg-[#111111] border border-[#222222] rounded-full px-3 py-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
+              <span className="text-[#9CA3AF] text-[12px] leading-none">Day {streak} streak</span>
+            </div>
+          </div>
+        )}
 
         {/* Mode Toggle */}
         <div className="flex gap-3 mb-8">

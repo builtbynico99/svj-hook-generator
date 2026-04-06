@@ -3,6 +3,12 @@ import Anthropic from '@anthropic-ai/sdk'
 import { getSupabase } from '@/lib/supabase'
 import { getCreatorPrompt, getStreamerPrompt } from '@/lib/prompts'
 
+function getPreviousDay(dateStr: string): string {
+  const d = new Date(dateStr)
+  d.setDate(d.getDate() - 1)
+  return d.toISOString().slice(0, 10)
+}
+
 function getAnthropic() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 }
@@ -76,20 +82,38 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Increment total_generations
+    // Fetch user for streak + total_generations update
     const { data: userData } = await supabase
       .from('users')
-      .select('total_generations')
+      .select('total_generations, last_generation_date, current_streak')
       .eq('email', email)
       .single()
 
+    const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
+    const last = userData?.last_generation_date ?? null
+    const prevStreak = userData?.current_streak ?? 0
     const currentCount = userData?.total_generations ?? 0
+
+    let newStreak = prevStreak
+    if (last === null || last < getPreviousDay(today)) {
+      // No history or gap > 1 day — reset
+      newStreak = 1
+    } else if (last === getPreviousDay(today)) {
+      // Generated yesterday — extend streak
+      newStreak = prevStreak + 1
+    }
+    // If last === today, streak stays the same (already generated today)
+
     await supabase
       .from('users')
-      .update({ total_generations: currentCount + 1 })
+      .update({
+        total_generations: currentCount + 1,
+        last_generation_date: today,
+        current_streak: newStreak,
+      })
       .eq('email', email)
 
-    return NextResponse.json({ hooks: savedHooks, productInsight })
+    return NextResponse.json({ hooks: savedHooks, productInsight, streak: newStreak })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('Generate error:', err)
