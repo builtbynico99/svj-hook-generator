@@ -97,6 +97,9 @@ export default function Home() {
               <p className="mt-4 text-[#9CA3AF] text-xs text-center">
                 Free forever. No spam. SVJ Media.
               </p>
+              <p className="mt-2 text-[#555555] text-xs text-center">
+                Check your inbox — ConvertKit will send you a confirmation email. Click it to stay on the list.
+              </p>
             </>
           ) : (
             <>
