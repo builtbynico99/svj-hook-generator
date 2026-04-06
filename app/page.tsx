@@ -7,6 +7,8 @@ export default function Home() {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+  const [submittedEmail, setSubmittedEmail] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -35,7 +37,8 @@ export default function Home() {
       }
 
       localStorage.setItem('svj_user_email', email)
-      router.push('/generator')
+      setSubmittedEmail(email)
+      setSubmitted(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.')
     } finally {
@@ -53,41 +56,78 @@ export default function Home() {
       {/* Center content */}
       <div className="flex-1 flex items-center justify-center px-6">
         <div className="w-full max-w-md">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4">
-            Write hooks that stop the scroll.
-          </h1>
-          <p className="text-[#9CA3AF] text-base sm:text-lg leading-relaxed mb-10">
-            The free tool built on the SVJ short-form formula. Used by streamers and creators who are done leaving views on the table.
-          </p>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-              className="w-full bg-[#111111] border border-[#222222] text-white placeholder-[#9CA3AF] rounded-[8px] px-4 py-3 text-sm focus:outline-none focus:border-[#2563EB] transition-colors"
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-white text-black font-semibold py-3 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? 'Setting up...' : 'Get free access'}
-            </button>
-          </form>
+          {!submitted ? (
+            <>
+              <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4">
+                Write hooks that stop the scroll.
+              </h1>
+              <p className="text-[#9CA3AF] text-base sm:text-lg leading-relaxed mb-6">
+                The free tool built on the SVJ short-form formula. Used by streamers and creators who are done leaving views on the table.
+              </p>
 
-          {error && (
-            <p className="mt-3 text-red-400 text-sm">{error}</p>
+              <div className="bg-[#111111] border border-[#222222] rounded-[8px] px-4 py-3 mb-6">
+                <p className="text-[#9CA3AF] text-xs leading-relaxed">
+                  <span className="text-white font-medium">Bookmark this page</span> after you sign up and save the link. Your access is tied to this browser automatically — so you can come back and use it anytime without signing in again. If you switch browsers or devices, just re-enter your email.
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  required
+                  className="w-full bg-[#111111] border border-[#222222] text-white placeholder-[#9CA3AF] rounded-[8px] px-4 py-3 text-sm focus:outline-none focus:border-[#2563EB] transition-colors"
+                />
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-white text-black font-semibold py-3 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Setting up...' : 'Get free access'}
+                </button>
+              </form>
+
+              {error && (
+                <p className="mt-3 text-red-400 text-sm">{error}</p>
+              )}
+
+              <p className="mt-4 text-[#9CA3AF] text-xs text-center">
+                Free forever. No spam. SVJ Media.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="mb-6">
+                <div className="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center mb-5">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M3 8L6.5 11.5L13 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-2">You're in.</h2>
+                <p className="text-[#9CA3AF] text-sm leading-relaxed">
+                  Access saved to <span className="text-white font-medium">{submittedEmail}</span> on this browser.
+                </p>
+              </div>
+
+              <div className="bg-[#111111] border border-[#222222] rounded-[8px] px-4 py-4 mb-6 space-y-2">
+                <p className="text-white text-sm font-medium">Before you continue:</p>
+                <p className="text-[#9CA3AF] text-sm leading-relaxed">
+                  Bookmark this page now. Your access is automatic on this browser — but if you open a new browser or device, you will need to re-enter <span className="text-white">{submittedEmail}</span> to get back in.
+                </p>
+              </div>
+
+              <button
+                onClick={() => router.push('/generator')}
+                className="w-full bg-white text-black font-semibold py-3 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors"
+              >
+                Go to generator ↗
+              </button>
+            </>
           )}
 
-          <p className="mt-4 text-[#9CA3AF] text-xs text-center">
-            Free forever. No spam. SVJ Media.
-          </p>
-          <p className="mt-3 text-[#555555] text-xs text-center">
-            Bookmark this page after you sign up. Your access is saved to this browser automatically.
-          </p>
         </div>
       </div>
     </main>
