@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
 
 type Mode = 'creator' | 'streamer'
-type Hook = { type: string; text: string }
+type Hook = { id: string; type: string; text: string }
 type HistoryItem = { hook_text: string; created_at: string; platform: string; niche: string }
 
 const CREATOR_NICHES = ['Personal Finance', 'Fitness', 'Lifestyle', 'Business', 'Creator Economy', 'Gaming', 'Other']
@@ -28,6 +28,7 @@ export default function Generator() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyOpen, setHistoryOpen] = useState(false)
   const [copied, setCopied] = useState<number | null>(null)
+  const [ratings, setRatings] = useState<Record<string, 1 | -1>>({})
   const [error, setError] = useState('')
 
   const fetchUser = useCallback(async (userEmail: string) => {
@@ -99,6 +100,16 @@ export default function Generator() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function ratehook(hookId: string, rating: 1 | -1) {
+    if (!hookId) return
+    setRatings((prev) => ({ ...prev, [hookId]: rating }))
+    await fetch('/api/feedback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ hookId, rating }),
+    })
   }
 
   function copyHook(text: string, idx: number) {
@@ -245,18 +256,42 @@ export default function Generator() {
                 className="bg-[#111111] border border-[#222222] rounded-[8px] p-5"
               >
                 <div className="flex items-start justify-between gap-4">
-                  <div>
+                  <div className="flex-1">
                     <p className="text-[#9CA3AF] text-xs font-medium uppercase tracking-wider mb-2">
                       Hook {idx + 1} — {hook.type}
                     </p>
                     <p className="text-white text-base leading-relaxed">{hook.text}</p>
                   </div>
-                  <button
-                    onClick={() => copyHook(hook.text, idx)}
-                    className="shrink-0 text-xs text-[#9CA3AF] border border-[#222222] px-3 py-1.5 rounded-[8px] hover:text-white hover:border-[#444444] transition-colors"
-                  >
-                    {copied === idx ? 'Copied' : 'Copy'}
-                  </button>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <button
+                      onClick={() => ratehook(hook.id, 1)}
+                      title="This worked"
+                      className={`text-sm px-2.5 py-1.5 rounded-[8px] border transition-colors ${
+                        ratings[hook.id] === 1
+                          ? 'bg-green-500 border-green-500 text-white'
+                          : 'border-[#222222] text-[#9CA3AF] hover:border-green-500 hover:text-green-500'
+                      }`}
+                    >
+                      👍
+                    </button>
+                    <button
+                      onClick={() => ratehook(hook.id, -1)}
+                      title="This didn't work"
+                      className={`text-sm px-2.5 py-1.5 rounded-[8px] border transition-colors ${
+                        ratings[hook.id] === -1
+                          ? 'bg-red-500 border-red-500 text-white'
+                          : 'border-[#222222] text-[#9CA3AF] hover:border-red-500 hover:text-red-500'
+                      }`}
+                    >
+                      👎
+                    </button>
+                    <button
+                      onClick={() => copyHook(hook.text, idx)}
+                      className="text-xs text-[#9CA3AF] border border-[#222222] px-3 py-1.5 rounded-[8px] hover:text-white hover:border-[#444444] transition-colors"
+                    >
+                      {copied === idx ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

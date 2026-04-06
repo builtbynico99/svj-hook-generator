@@ -61,8 +61,13 @@ export async function POST(req: NextRequest) {
 
     const supabase = getSupabase()
 
+    let savedHooks: { id: string; type: string; text: string }[] = hooks.map((h) => ({ id: '', ...h }))
+
     if (hookInserts.length > 0) {
-      await supabase.from('hooks').insert(hookInserts)
+      const { data } = await supabase.from('hooks').insert(hookInserts).select('id')
+      if (data) {
+        savedHooks = hooks.map((h, i) => ({ id: data[i]?.id ?? '', ...h }))
+      }
     }
 
     // Increment total_generations
@@ -78,7 +83,7 @@ export async function POST(req: NextRequest) {
       .update({ total_generations: currentCount + 1 })
       .eq('email', email)
 
-    return NextResponse.json({ hooks, productInsight })
+    return NextResponse.json({ hooks: savedHooks, productInsight })
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error'
     console.error('Generate error:', err)
