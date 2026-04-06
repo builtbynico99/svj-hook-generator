@@ -2,10 +2,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
-  const { email } = await req.json()
+  const { email, website } = await req.json()
 
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+  }
+
+  // Honeypot check — bots fill this, real users don't
+  if (website) {
+    return NextResponse.json({ success: true })
   }
 
   const apiKey = process.env.CONVERTKIT_API_KEY

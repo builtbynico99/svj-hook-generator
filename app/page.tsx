@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const [email, setEmail] = useState('')
+  const [honeypot, setHoneypot] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -24,11 +25,13 @@ export default function Home() {
     setLoading(true)
     setError('')
 
+    if (honeypot) return
+
     try {
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, website: honeypot }),
       })
 
       if (!res.ok) {
@@ -73,6 +76,17 @@ export default function Home() {
               </div>
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                {/* Honeypot — hidden from real users, catches bots */}
+                <input
+                  type="text"
+                  name="website"
+                  value={honeypot}
+                  onChange={(e) => setHoneypot(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}
+                />
                 <input
                   type="email"
                   value={email}

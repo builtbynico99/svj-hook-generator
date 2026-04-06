@@ -4,13 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
 import { triggerCopyAnimation } from '@/lib/copyAnimation'
+import NicheDropdown from '@/components/NicheDropdown'
 
 type Mode = 'creator' | 'streamer'
 type Hook = { id: string; type: string; text: string; score: number }
 type HistoryItem = { hook_text: string; created_at: string; platform: string; niche: string }
 
-const CREATOR_NICHES = ['Personal Finance', 'Fitness', 'Lifestyle', 'Business', 'Creator Economy', 'Gaming', 'Other']
-const STREAMER_NICHES = ['FPS/Competitive', 'IRL/Variety', 'Sports', 'Just Chatting', 'Roleplay/RPG', 'Other']
 const PLATFORMS = ['Reels', 'YouTube Shorts', 'TikTok']
 const STYLES = ['Pattern break', 'Bold claim', 'Curiosity gap', 'Contrarian']
 
@@ -20,7 +19,7 @@ export default function Generator() {
   const [totalGenerations, setTotalGenerations] = useState(0)
   const [mode, setMode] = useState<Mode>('creator')
   const [platform, setPlatform] = useState('Reels')
-  const [niche, setNiche] = useState('Personal Finance')
+  const [niche, setNiche] = useState('All niches')
   const [style, setStyle] = useState('Pattern break')
   const [topic, setTopic] = useState('')
   const [loading, setLoading] = useState(false)
@@ -38,6 +37,9 @@ export default function Generator() {
   const [qualifies, setQualifies] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [error, setError] = useState('')
+  const [dailyGenerations, setDailyGenerations] = useState(0)
+  const [dailyLimit, setDailyLimit] = useState(10)
+  const [countdown, setCountdown] = useState(0)
 
   // Revenue calculator state
   const [followers, setFollowers] = useState(50000)
@@ -79,8 +81,8 @@ export default function Generator() {
   }, [router, fetchUser, fetchHistory])
 
   useEffect(() => {
-    if (mode === 'creator') { setNiche('Personal Finance'); setPlatform('Reels') }
-    else { setNiche('FPS/Competitive'); setPlatform('TikTok') }
+    if (mode === 'creator') { setNiche('All niches'); setPlatform('Reels') }
+    else { setNiche('All niches'); setPlatform('TikTok') }
   }, [mode])
 
   useEffect(() => {
@@ -139,7 +141,17 @@ export default function Generator() {
       setProductInsight(data.productInsight)
       setTotalGenerations((prev) => prev + 1)
       if (data.streak) setStreak(data.streak)
+      if (data.dailyGenerations != null) setDailyGenerations(data.dailyGenerations)
+      if (data.dailyLimit != null) setDailyLimit(data.dailyLimit)
       fetchHistory(email)
+      // Layer 8: start 5-second UI countdown
+      let secs = 5
+      setCountdown(secs)
+      const timer = setInterval(() => {
+        secs -= 1
+        if (secs <= 0) { clearInterval(timer); setCountdown(0) }
+        else setCountdown(secs)
+      }, 1000)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.')
     } finally {
@@ -161,7 +173,15 @@ export default function Generator() {
     triggerCopyAnimation(btn, text)
   }
 
-  const niches = mode === 'creator' ? CREATOR_NICHES : STREAMER_NICHES
+  const limitReached = dailyGenerations >= dailyLimit
+  const buttonLabel = loading
+    ? 'Generating...'
+    : countdown > 0
+    ? `Generate again in ${countdown}...`
+    : limitReached
+    ? 'Daily limit reached'
+    : 'Generate hooks ↗'
+  const buttonDisabled = loading || countdown > 0 || limitReached
   const showAcademy = totalGenerations >= 1
   const showUpsells = totalGenerations >= 3
 
@@ -245,13 +265,7 @@ export default function Generator() {
             <label className="text-[#9CA3AF] text-xs font-medium uppercase tracking-wider block mb-2">
               Niche
             </label>
-            <select
-              value={niche}
-              onChange={(e) => setNiche(e.target.value)}
-              className="w-full bg-[#0A0A0A] border border-[#222222] text-white rounded-[8px] px-4 py-2.5 text-sm focus:outline-none focus:border-[#2563EB] transition-colors appearance-none cursor-pointer"
-            >
-              {niches.map((n) => <option key={n} value={n}>{n}</option>)}
-            </select>
+            <NicheDropdown mode={mode} value={niche} onChange={setNiche} />
           </div>
 
           {/* Hook style tabs — horizontal scroll on mobile, wrap on desktop */}
@@ -297,14 +311,30 @@ export default function Generator() {
         <div className="btn-glow-wrap mb-8 hidden md:block">
           <button
             onClick={handleGenerate}
-            disabled={loading || !topic.trim()}
+            disabled={buttonDisabled || !topic.trim()}
             className="w-full bg-white text-black font-semibold py-3.5 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Generating...' : 'Generate hooks ↗'}
+            {buttonLabel}
           </button>
         </div>
 
         {error && <p className="text-red-400 text-sm mb-6">{error}</p>}
+
+        {/* Layer 5: Daily limit reached card */}
+        {limitReached && (
+          <div className="bg-[#111111] border border-[#222222] rounded-[8px] p-5 mb-6">
+            <p className="text-white font-semibold text-sm mb-1">You hit your 10 hooks for today.</p>
+            <p className="text-[#9CA3AF] text-sm mb-4">Come back tomorrow. Or stop waiting and build something that generates while you sleep.</p>
+            <a
+              href="https://svjmedia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-white text-black text-xs font-semibold px-4 py-2.5 rounded-[8px] hover:bg-[#E5E7EB] transition-colors"
+            >
+              Join SVJ Academy — free
+            </a>
+          </div>
+        )}
 
         {/* Output */}
         {hooks.length > 0 && (
@@ -420,10 +450,10 @@ export default function Generator() {
             {/* Generate more */}
             <button
               onClick={handleGenerate}
-              disabled={loading}
+              disabled={buttonDisabled}
               className="w-full border border-[#222222] text-[#9CA3AF] font-medium py-3 rounded-[8px] text-sm hover:text-white hover:border-[#444444] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Generating...' : 'Generate 3 more'}
+              {loading ? 'Generating...' : countdown > 0 ? `Generate again in ${countdown}...` : limitReached ? 'Daily limit reached' : 'Generate 3 more'}
             </button>
           </div>
         )}
@@ -582,10 +612,10 @@ export default function Generator() {
       <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#0A0A0A] border-t border-[#222222] h-14 flex items-center px-8">
         <button
           onClick={handleGenerate}
-          disabled={loading || !topic.trim()}
+          disabled={buttonDisabled || !topic.trim()}
           className="w-full h-10 bg-white text-black font-semibold rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Generating...' : 'Generate hooks ↗'}
+          {buttonLabel}
         </button>
       </div>
 

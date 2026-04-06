@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { SCORER_PROMPT } from '@/lib/prompts'
+import { getToolLimiter, getClientIp, EMAIL_REGEX } from '@/lib/ratelimit'
 
 function parseScore(text: string): { score: number; feedback: string[] } {
   const scoreMatch = text.match(/SCORE:\s*(\d+)/i)
@@ -17,10 +18,33 @@ function parseScore(text: string): { score: number; feedback: string[] } {
 }
 
 export async function POST(req: NextRequest) {
-  const { hook } = await req.json()
+  const body = await req.json()
+  const { hook, email } = body
 
   if (!hook) {
     return NextResponse.json({ error: 'Hook text is required' }, { status: 400 })
+  }
+
+  if (email) {
+    if (!EMAIL_REGEX.test(email)) {
+      return NextResponse.json({ error: 'Invalid email' }, { status: 401 })
+    }
+    const limiter = getToolLimiter()
+    if (limiter) {
+      const { success } = await limiter.limit(`score:${email}`)
+      if (!success) {
+        return NextResponse.json({ error: 'limit_reached', message: 'Daily limit reached.' }, { status: 429 })
+      }
+    }
+  } else {
+    const ip = getClientIp(req)
+    const limiter = getToolLimiter()
+    if (limiter) {
+      const { success } = await limiter.limit(`score-ip:${ip}`)
+      if (!success) {
+        return NextResponse.json({ error: 'limit_reached', message: 'Daily limit reached.' }, { status: 429 })
+      }
+    }
   }
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
