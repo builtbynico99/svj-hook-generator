@@ -17,6 +17,9 @@ export default function Nav() {
           <Link href="/vault" className="text-[#9CA3AF] text-sm hover:text-white transition-colors">
             Vault
           </Link>
+          <Link href="/ab-tester" className="text-[#9CA3AF] text-sm hover:text-white transition-colors">
+            A/B Tester
+          </Link>
           <Link href="/scorer" className="text-[#9CA3AF] text-sm hover:text-white transition-colors">
             Scorer
           </Link>
