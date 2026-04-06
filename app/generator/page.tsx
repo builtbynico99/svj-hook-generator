@@ -279,13 +279,15 @@ export default function Generator() {
         </div>
 
         {/* Generate button */}
-        <button
-          onClick={handleGenerate}
-          disabled={loading || !topic.trim()}
-          className="w-full bg-white text-black font-semibold py-3.5 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-8"
-        >
-          {loading ? 'Generating...' : 'Generate hooks ↗'}
-        </button>
+        <div className="btn-glow-wrap mb-8">
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !topic.trim()}
+            className="w-full bg-white text-black font-semibold py-3.5 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Generating...' : 'Generate hooks ↗'}
+          </button>
+        </div>
 
         {error && (
           <p className="text-red-400 text-sm mb-6">{error}</p>

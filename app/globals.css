@@ -23,3 +23,44 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* ── Noise texture overlay ───────────────────────────────────────────────────
+   SVG feTurbulence noise rendered into a data URI, applied as a fixed
+   pseudo-element on body. Pointer-events none so it never blocks clicks.
+   3% opacity — barely visible, just enough to break the flat black.
+*/
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 300px 300px;
+}
+
+/* ── Generate button glow ────────────────────────────────────────────────────
+   Applied to .btn-glow-wrap — a wrapper div around the generate button.
+   The ::before pseudo-element renders the glow behind the button using
+   a radial gradient at 15% opacity. position:relative on the wrapper
+   and overflow:visible ensures no layout shift on any screen size.
+*/
+.btn-glow-wrap {
+  position: relative;
+}
+
+.btn-glow-wrap::before {
+  content: '';
+  position: absolute;
+  inset: -40px;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.btn-glow-wrap > * {
+  position: relative;
+  z-index: 1;
+}
