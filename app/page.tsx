@@ -85,6 +85,9 @@ export default function Home() {
           <p className="mt-4 text-[#9CA3AF] text-xs text-center">
             Free forever. No spam. SVJ Media.
           </p>
+          <p className="mt-3 text-[#555555] text-xs text-center">
+            Bookmark this page after you sign up. Your access is saved to this browser automatically.
+          </p>
         </div>
       </div>
     </main>
