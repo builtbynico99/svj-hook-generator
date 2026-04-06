@@ -37,6 +37,11 @@ export default function Generator() {
   const [streak, setStreak] = useState(0)
   const [error, setError] = useState('')
 
+  // Revenue calculator state
+  const [followers, setFollowers] = useState(50000)
+  const [engagementRate, setEngagementRate] = useState(1.0)
+  const [price, setPrice] = useState(25)
+
   const fetchUser = useCallback(async (userEmail: string) => {
     const res = await fetch(`/api/user?email=${encodeURIComponent(userEmail)}`)
     if (res.ok) {
@@ -399,6 +404,108 @@ export default function Generator() {
             >
               {loading ? 'Generating...' : 'Generate 3 more'}
             </button>
+          </div>
+        )}
+
+        {/* Revenue Potential Calculator — shown at 7+ lifetime generations */}
+        {totalGenerations >= 7 && (
+          <div className="bg-[#111111] border border-[#222222] rounded-[12px] p-5 mb-6">
+            <p className="text-white text-sm font-semibold mb-5">What your audience is worth.</p>
+
+            {/* Sliders */}
+            <div className="space-y-5 mb-6">
+              {/* Followers */}
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <label className="text-[#9CA3AF] text-xs uppercase tracking-wider">Follower count</label>
+                  <span className="text-white text-xs font-medium">{followers.toLocaleString()} followers</span>
+                </div>
+                <input
+                  type="range"
+                  min={1000}
+                  max={2000000}
+                  step={1000}
+                  value={followers}
+                  onChange={(e) => setFollowers(Number(e.target.value))}
+                  className="w-full accent-[#2563EB] cursor-pointer"
+                />
+              </div>
+
+              {/* Engagement rate */}
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <label className="text-[#9CA3AF] text-xs uppercase tracking-wider">Engagement rate</label>
+                  <span className="text-white text-xs font-medium">{engagementRate.toFixed(1)}%</span>
+                </div>
+                <input
+                  type="range"
+                  min={0.5}
+                  max={5}
+                  step={0.1}
+                  value={engagementRate}
+                  onChange={(e) => setEngagementRate(Number(e.target.value))}
+                  className="w-full accent-[#2563EB] cursor-pointer"
+                />
+              </div>
+
+              {/* Price */}
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <label className="text-[#9CA3AF] text-xs uppercase tracking-wider">Paid community price</label>
+                  <span className="text-white text-xs font-medium">${price}/month</span>
+                </div>
+                <input
+                  type="range"
+                  min={9}
+                  max={49}
+                  step={1}
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full accent-[#2563EB] cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Metric cards */}
+            {(() => {
+              const monthly = Math.round(followers * (engagementRate / 100) * price)
+              const svjTakes = Math.round(monthly * 0.30)
+              const youKeep = Math.round(monthly * 0.70)
+              const fmt = (n: number) => `$${n.toLocaleString()}`
+              return (
+                <>
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="bg-[#0A0A0A] border border-[#222222] rounded-[8px] p-3 text-center">
+                      <p className="text-[#9CA3AF] text-[10px] uppercase tracking-wider mb-1">Monthly Revenue</p>
+                      <p className="text-white text-sm font-bold">{fmt(monthly)}</p>
+                      <p className="text-[#555555] text-[10px]">/month</p>
+                    </div>
+                    <div className="bg-[#0A0A0A] border border-[#222222] rounded-[8px] p-3 text-center">
+                      <p className="text-[#9CA3AF] text-[10px] uppercase tracking-wider mb-1">SVJ Takes</p>
+                      <p className="text-white text-sm font-bold">{fmt(svjTakes)}</p>
+                      <p className="text-[#555555] text-[10px]">/month</p>
+                    </div>
+                    <div className="bg-[#0A0A0A] border border-[#2563EB] rounded-[8px] p-3 text-center">
+                      <p className="text-[#9CA3AF] text-[10px] uppercase tracking-wider mb-1">You Keep</p>
+                      <p className="text-[#2563EB] text-sm font-bold">{fmt(youKeep)}</p>
+                      <p className="text-[#555555] text-[10px]">/month</p>
+                    </div>
+                  </div>
+                  <p className="text-[#555555] text-[13px] leading-relaxed mb-4">
+                    Conservative case. Based on 1% of your audience converting to a $25/month community.
+                  </p>
+                </>
+              )
+            })()}
+
+            <a
+              href="https://svjmedia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block bg-white text-black text-xs font-semibold px-4 py-2 rounded-[8px] hover:bg-[#E5E7EB] transition-colors"
+            >
+              See how SVJ builds this for you
+            </a>
           </div>
         )}
 
