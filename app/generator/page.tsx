@@ -29,6 +29,9 @@ export default function Generator() {
   const [historyOpen, setHistoryOpen] = useState(false)
   const [copied, setCopied] = useState<number | null>(null)
   const [ratings, setRatings] = useState<Record<string, 1 | -1>>({})
+  const [displayedText, setDisplayedText] = useState<string[]>([])
+  const [typingDone, setTypingDone] = useState<boolean[]>([])
+  const [showProduct, setShowProduct] = useState(false)
   const [error, setError] = useState('')
 
   const fetchUser = useCallback(async (userEmail: string) => {
@@ -73,12 +76,54 @@ export default function Generator() {
     }
   }, [mode])
 
+  useEffect(() => {
+    if (hooks.length === 0) return
+    setDisplayedText(hooks.map(() => ''))
+    setTypingDone(hooks.map(() => false))
+    setShowProduct(false)
+
+    let cancelled = false
+    const SPEED = 18
+
+    async function typeHook(idx: number) {
+      const full = hooks[idx].text
+      for (let i = 0; i <= full.length; i++) {
+        if (cancelled) return
+        setDisplayedText((prev) => {
+          const next = [...prev]
+          next[idx] = full.slice(0, i)
+          return next
+        })
+        await new Promise((r) => setTimeout(r, SPEED))
+      }
+      setTypingDone((prev) => {
+        const next = [...prev]
+        next[idx] = true
+        return next
+      })
+    }
+
+    async function runAll() {
+      for (let i = 0; i < hooks.length; i++) {
+        await typeHook(i)
+        if (cancelled) return
+      }
+      setShowProduct(true)
+    }
+
+    runAll()
+    return () => { cancelled = true }
+  }, [hooks])
+
   async function handleGenerate() {
     if (!topic.trim() || !email) return
     setLoading(true)
     setError('')
     setHooks([])
     setProductInsight('')
+    setDisplayedText([])
+    setTypingDone([])
+    setShowProduct(false)
 
     try {
       const res = await fetch('/api/generate', {
@@ -250,55 +295,75 @@ export default function Generator() {
         {hooks.length > 0 && (
           <div className="space-y-4 mb-6">
             {/* Hook cards */}
-            {hooks.map((hook, idx) => (
-              <div
-                key={idx}
-                className="bg-[#111111] border border-[#222222] rounded-[8px] p-5"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <p className="text-[#9CA3AF] text-xs font-medium uppercase tracking-wider mb-2">
-                      Hook {idx + 1} — {hook.type}
-                    </p>
-                    <p className="text-white text-base leading-relaxed">{hook.text}</p>
-                  </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <button
-                      onClick={() => ratehook(hook.id, 1)}
-                      title="This worked"
-                      className={`text-sm px-2.5 py-1.5 rounded-[8px] border transition-colors ${
-                        ratings[hook.id] === 1
-                          ? 'bg-green-500 border-green-500 text-white'
-                          : 'border-[#222222] text-[#9CA3AF] hover:border-green-500 hover:text-green-500'
-                      }`}
-                    >
-                      👍
-                    </button>
-                    <button
-                      onClick={() => ratehook(hook.id, -1)}
-                      title="This didn't work"
-                      className={`text-sm px-2.5 py-1.5 rounded-[8px] border transition-colors ${
-                        ratings[hook.id] === -1
-                          ? 'bg-red-500 border-red-500 text-white'
-                          : 'border-[#222222] text-[#9CA3AF] hover:border-red-500 hover:text-red-500'
-                      }`}
-                    >
-                      👎
-                    </button>
-                    <button
-                      onClick={() => copyHook(hook.text, idx)}
-                      className="text-xs text-[#9CA3AF] border border-[#222222] px-3 py-1.5 rounded-[8px] hover:text-white hover:border-[#444444] transition-colors"
-                    >
-                      {copied === idx ? 'Copied' : 'Copy'}
-                    </button>
+            {hooks.map((hook, idx) => {
+              const done = typingDone[idx] ?? false
+              return (
+                <div
+                  key={idx}
+                  className="bg-[#111111] border border-[#222222] rounded-[8px] p-5"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <p className="text-[#9CA3AF] text-xs font-medium uppercase tracking-wider mb-2">
+                        Hook {idx + 1} — {hook.type}
+                      </p>
+                      <p className="text-white text-base leading-relaxed">
+                        {displayedText[idx] ?? ''}
+                        {!done && <span className="inline-block w-0.5 h-4 bg-white ml-0.5 animate-pulse align-middle" />}
+                      </p>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <button
+                        onClick={() => done && ratehook(hook.id, 1)}
+                        disabled={!done}
+                        title="This worked"
+                        className={`text-sm px-2.5 py-1.5 rounded-[8px] border transition-colors ${
+                          !done
+                            ? 'border-[#222222] text-[#333333] cursor-not-allowed'
+                            : ratings[hook.id] === 1
+                            ? 'bg-green-500 border-green-500 text-white'
+                            : 'border-[#222222] text-[#9CA3AF] hover:border-green-500 hover:text-green-500'
+                        }`}
+                      >
+                        👍
+                      </button>
+                      <button
+                        onClick={() => done && ratehook(hook.id, -1)}
+                        disabled={!done}
+                        title="This didn't work"
+                        className={`text-sm px-2.5 py-1.5 rounded-[8px] border transition-colors ${
+                          !done
+                            ? 'border-[#222222] text-[#333333] cursor-not-allowed'
+                            : ratings[hook.id] === -1
+                            ? 'bg-red-500 border-red-500 text-white'
+                            : 'border-[#222222] text-[#9CA3AF] hover:border-red-500 hover:text-red-500'
+                        }`}
+                      >
+                        👎
+                      </button>
+                      <button
+                        onClick={() => done && copyHook(hook.text, idx)}
+                        disabled={!done}
+                        className={`text-xs border px-3 py-1.5 rounded-[8px] transition-colors ${
+                          !done
+                            ? 'border-[#222222] text-[#333333] cursor-not-allowed'
+                            : 'text-[#9CA3AF] border-[#222222] hover:text-white hover:border-[#444444]'
+                        }`}
+                      >
+                        {copied === idx ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             {/* Product opportunity */}
             {productInsight && (
-              <div className="border-l-4 border-[#2563EB] bg-[#111111] rounded-r-[8px] px-5 py-4">
+              <div
+                className="border-l-4 border-[#2563EB] bg-[#111111] rounded-r-[8px] px-5 py-4 transition-opacity duration-700"
+                style={{ opacity: showProduct ? 1 : 0 }}
+              >
                 <p className="text-[#2563EB] text-xs font-semibold uppercase tracking-wider mb-1">
                   Product opportunity
                 </p>
