@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   const supabase = getSupabase()
   const { data, error } = await supabase
     .from('users')
-    .select('total_generations, is_streamer, current_streak')
+    .select('total_generations, is_streamer, current_streak, created_at')
     .eq('email', email)
     .single()
 

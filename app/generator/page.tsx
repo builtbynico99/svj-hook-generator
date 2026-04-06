@@ -35,6 +35,8 @@ export default function Generator() {
   const [typingDone, setTypingDone] = useState<boolean[]>([])
   const [showProduct, setShowProduct] = useState(false)
   const [streak, setStreak] = useState(0)
+  const [qualifies, setQualifies] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
   const [error, setError] = useState('')
 
   // Revenue calculator state
@@ -48,6 +50,15 @@ export default function Generator() {
       const data = await res.json()
       setTotalGenerations(data.total_generations ?? 0)
       setStreak(data.current_streak ?? 0)
+
+      // Check partnership qualifier
+      const gens = data.total_generations ?? 0
+      const str = data.current_streak ?? 0
+      const createdAt = data.created_at ? new Date(data.created_at) : null
+      const daysSinceCreation = createdAt
+        ? (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+        : 0
+      setQualifies(gens >= 30 && str >= 5 && daysSinceCreation >= 7)
     }
   }, [])
 
@@ -161,13 +172,23 @@ export default function Generator() {
       {/* pb-24 on mobile to clear the fixed generate bar */}
       <main className="max-w-2xl mx-auto px-4 py-8 sm:py-12 pb-28 md:pb-12">
 
-        {/* Streak pill — top right, shown from day 2 */}
-        {streak >= 2 && (
-          <div className="flex justify-end mb-4">
-            <div className="flex items-center gap-1.5 bg-[#111111] border border-[#222222] rounded-full px-3 py-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
-              <span className="text-[#9CA3AF] text-[12px] leading-none">Day {streak} streak</span>
-            </div>
+        {/* Header row: streak + qualifier badge */}
+        {(streak >= 2 || qualifies) && (
+          <div className="flex justify-end items-center gap-2 mb-4">
+            {streak >= 2 && (
+              <div className="flex items-center gap-1.5 bg-[#111111] border border-[#222222] rounded-full px-3 py-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#2563EB] shrink-0" />
+                <span className="text-[#9CA3AF] text-[12px] leading-none">Day {streak} streak</span>
+              </div>
+            )}
+            {qualifies && (
+              <button
+                onClick={() => setModalOpen(true)}
+                className="border border-[#2563EB] rounded-full px-3 py-1 text-[11px] text-[#2563EB] hover:bg-[#2563EB]/10 transition-colors"
+              >
+                SVJ Partnership — You may qualify.
+              </button>
+            )}
           </div>
         )}
 
@@ -569,6 +590,48 @@ export default function Generator() {
       </div>
 
       {/* ── Bottom sheet — mobile saved hooks ────────────────────────────────── */}
+      {/* ── Partnership qualifier modal ───────────────────────────────────────── */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-[480px] bg-[#111111] border border-[#222222] rounded-[12px] p-8 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close */}
+            <button
+              onClick={() => setModalOpen(false)}
+              className="absolute top-4 right-4 text-[#9CA3AF] text-lg leading-none hover:text-white transition-colors"
+            >
+              ✕
+            </button>
+
+            <h2 className="text-white text-[18px] font-bold mb-4 leading-snug">
+              You may qualify for an SVJ Partnership.
+            </h2>
+            <p className="text-[#9CA3AF] text-[14px] leading-[1.6] mb-4">
+              You have been using the tool consistently. That is exactly the signal SVJ looks for. Partners get their full monetization backend built — paid community, digital products, funnels — on rev share. Zero upfront.
+            </p>
+            <p className="text-[#9CA3AF] text-[13px] leading-relaxed mb-6">
+              {mode === 'streamer'
+                ? 'Best fit: streamers with 1,000+ concurrent viewers.'
+                : 'Best fit: creators posting consistently to 50K+ followers.'}
+            </p>
+            <a
+              href="https://svjmedia.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full bg-white text-black text-sm font-semibold py-3 rounded-[8px] text-center hover:bg-[#E5E7EB] transition-colors"
+            >
+              Apply to partner
+            </a>
+          </div>
+        </div>
+      )}
+
       {sheetOpen && (
         <>
           {/* Backdrop */}
