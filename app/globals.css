@@ -24,6 +24,15 @@ a {
   text-decoration: none;
 }
 
+/* Hide scrollbar visually while keeping scroll functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Noise texture overlay ───────────────────────────────────────────────────
    SVG feTurbulence noise rendered into a data URI, applied as a fixed
    pseudo-element on body. Pointer-events none so it never blocks clicks.
