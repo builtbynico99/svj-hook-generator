@@ -25,57 +25,63 @@ function parseResponse(text: string): { hooks: { type: string; text: string }[];
 }
 
 export async function POST(req: NextRequest) {
-  const { topic, platform, niche, style, mode, email } = await req.json()
+  try {
+    const { topic, platform, niche, style, mode, email } = await req.json()
 
-  if (!topic || !platform || !niche || !style || !mode || !email) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!topic || !platform || !niche || !style || !mode || !email) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    const systemPrompt =
+      mode === 'streamer'
+        ? getStreamerPrompt(platform, niche, style)
+        : getCreatorPrompt(platform, niche, style)
+
+    const anthropic = getAnthropic()
+    const message = await anthropic.messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1024,
+      system: systemPrompt,
+      messages: [{ role: 'user', content: `Topic: ${topic}` }],
+    })
+
+    const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
+    const { hooks, productInsight } = parseResponse(rawText)
+
+    // Save hooks to Supabase
+    const hookInserts = hooks.map((h) => ({
+      user_email: email,
+      hook_text: h.text,
+      platform,
+      niche,
+      style,
+      topic,
+      mode,
+    }))
+
+    const supabase = getSupabase()
+
+    if (hookInserts.length > 0) {
+      await supabase.from('hooks').insert(hookInserts)
+    }
+
+    // Increment total_generations
+    const { data: userData } = await supabase
+      .from('users')
+      .select('total_generations')
+      .eq('email', email)
+      .single()
+
+    const currentCount = userData?.total_generations ?? 0
+    await supabase
+      .from('users')
+      .update({ total_generations: currentCount + 1 })
+      .eq('email', email)
+
+    return NextResponse.json({ hooks, productInsight })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    console.error('Generate error:', err)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-
-  const systemPrompt =
-    mode === 'streamer'
-      ? getStreamerPrompt(platform, niche, style)
-      : getCreatorPrompt(platform, niche, style)
-
-  const anthropic = getAnthropic()
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
-    system: systemPrompt,
-    messages: [{ role: 'user', content: `Topic: ${topic}` }],
-  })
-
-  const rawText = message.content[0].type === 'text' ? message.content[0].text : ''
-  const { hooks, productInsight } = parseResponse(rawText)
-
-  // Save hooks to Supabase
-  const hookInserts = hooks.map((h) => ({
-    user_email: email,
-    hook_text: h.text,
-    platform,
-    niche,
-    style,
-    topic,
-    mode,
-  }))
-
-  const supabase = getSupabase()
-
-  if (hookInserts.length > 0) {
-    await supabase.from('hooks').insert(hookInserts)
-  }
-
-  // Increment total_generations
-  const { data: userData } = await supabase
-    .from('users')
-    .select('total_generations')
-    .eq('email', email)
-    .single()
-
-  const currentCount = userData?.total_generations ?? 0
-  await supabase
-    .from('users')
-    .update({ total_generations: currentCount + 1 })
-    .eq('email', email)
-
-  return NextResponse.json({ hooks, productInsight })
 }
