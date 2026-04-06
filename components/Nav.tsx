@@ -12,13 +12,19 @@ export default function Nav() {
             href="/generator"
             className="text-[#9CA3AF] text-sm hover:text-white transition-colors"
           >
-            Generator
+            Hooks
+          </Link>
+          <Link
+            href="/titles"
+            className="text-[#9CA3AF] text-sm hover:text-white transition-colors"
+          >
+            YT Titles
           </Link>
           <Link
             href="/scorer"
             className="text-[#9CA3AF] text-sm hover:text-white transition-colors"
           >
-            Hook Scorer
+            Scorer
           </Link>
         </div>
       </div>

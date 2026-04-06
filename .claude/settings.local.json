@@ -9,7 +9,13 @@
       "Bash(python3 -m json.tool)",
       "Bash(curl -s \"https://api.convertkit.com/v3/subscribers?api_key=U7M-qKdpfFCg5_pKCyN3vg&email_address=test-ck%40svjmedia.com\")",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(gh repo:*)",
+      "Bash(git --version)",
+      "Bash(node -e ':*)",
+      "Bash(curl -sv -X POST https://svj-hook-generator.vercel.app/api/generate -H 'Content-Type: application/json' -d '{\"topic\":\"How I paid off 30K in debt in 12 months\",\"platform\":\"Reels\",\"niche\":\"Personal Finance\",\"style\":\"Pattern break\",\"mode\":\"creator\",\"email\":\"vercel-test@svjmedia.com\"}')",
+      "Bash(curl -s -X POST https://svj-hook-generator.vercel.app/api/generate -H 'Content-Type: application/json' -d '{\"topic\":\"How I paid off 30K in debt in 12 months\",\"platform\":\"Reels\",\"niche\":\"Personal Finance\",\"style\":\"Pattern break\",\"mode\":\"creator\",\"email\":\"vercel-test@svjmedia.com\"}')"
     ]
   }
 }
