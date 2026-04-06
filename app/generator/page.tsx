@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
+import { triggerCopyAnimation } from '@/lib/copyAnimation'
 
 type Mode = 'creator' | 'streamer'
 type Hook = { id: string; type: string; text: string; score: number }
@@ -28,7 +29,7 @@ export default function Generator() {
   const [history, setHistory] = useState<HistoryItem[]>([])
   const [historyOpen, setHistoryOpen] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [copied, setCopied] = useState<number | null>(null)
+  const [copied, setCopied] = useState<number | null>(null) // kept for compat, unused after refactor
   const [ratings, setRatings] = useState<Record<string, 1 | -1>>({})
   const [displayedText, setDisplayedText] = useState<string[]>([])
   const [typingDone, setTypingDone] = useState<boolean[]>([])
@@ -137,10 +138,8 @@ export default function Generator() {
     })
   }
 
-  function copyHook(text: string, idx: number) {
-    navigator.clipboard.writeText(text)
-    setCopied(idx)
-    setTimeout(() => setCopied(null), 2000)
+  function copyHook(text: string, btn: HTMLButtonElement) {
+    triggerCopyAnimation(btn, text)
   }
 
   const niches = mode === 'creator' ? CREATOR_NICHES : STREAMER_NICHES
@@ -329,14 +328,15 @@ export default function Generator() {
                         }`}
                       >👎</button>
                       <button
-                        onClick={() => done && copyHook(hook.text, idx)}
+                        onClick={(e) => done && copyHook(hook.text, e.currentTarget)}
                         disabled={!done}
+                        style={{ transition: 'transform 100ms ease-out, color 200ms ease' }}
                         className={`text-xs border px-3 py-1.5 rounded-[8px] transition-colors ${
                           !done ? 'border-[#222222] text-[#333333] cursor-not-allowed'
                           : 'text-[#9CA3AF] border-[#222222] hover:text-white hover:border-[#444444]'
                         }`}
                       >
-                        {copied === idx ? 'Copied' : 'Copy'}
+                        Copy
                       </button>
                     </div>
                   </div>

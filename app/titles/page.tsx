@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
+import { triggerCopyAnimation } from '@/lib/copyAnimation'
 
 type Title = { type: string; text: string }
 
@@ -16,7 +17,7 @@ export default function Titles() {
   const [topic, setTopic] = useState('')
   const [loading, setLoading] = useState(false)
   const [titles, setTitles] = useState<Title[]>([])
-  const [copied, setCopied] = useState<number | null>(null)
+
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -49,10 +50,8 @@ export default function Titles() {
     }
   }
 
-  function copyTitle(text: string, idx: number) {
-    navigator.clipboard.writeText(text)
-    setCopied(idx)
-    setTimeout(() => setCopied(null), 2000)
+  function copyTitle(text: string, btn: HTMLButtonElement) {
+    triggerCopyAnimation(btn, text)
   }
 
   return (
@@ -148,10 +147,11 @@ export default function Titles() {
                     </p>
                   </div>
                   <button
-                    onClick={() => copyTitle(title.text, idx)}
+                    onClick={(e) => copyTitle(title.text, e.currentTarget)}
+                    style={{ transition: 'transform 100ms ease-out, color 200ms ease' }}
                     className="shrink-0 text-xs text-[#9CA3AF] border border-[#222222] px-3 py-1.5 rounded-[8px] hover:text-white hover:border-[#444444] transition-colors"
                   >
-                    {copied === idx ? 'Copied' : 'Copy'}
+                    Copy
                   </button>
                 </div>
               </div>
