@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
   if (!ckResponse.ok) {
     const err = await ckResponse.text()
     console.error('ConvertKit subscribe error:', err)
+    return NextResponse.json({ error: 'ConvertKit error', detail: err }, { status: 500 })
   }
 
   // Upsert user into Supabase
