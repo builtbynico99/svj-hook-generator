@@ -3,18 +3,61 @@ function buildExamplesBlock(examples: string[]): string {
   return `\n\nHIGH-PERFORMING HOOKS FROM REAL USERS (thumbs up rated — study and exceed these):\n${examples.map((h, i) => `${i + 1}. "${h}"`).join('\n')}\n\nDo not copy these. Extract what makes them work and write something stronger.`
 }
 
-export function getCreatorPrompt(platform: string, niche: string, style: string, examples: string[] = []): string {
-  return `You are the SVJ Media hook writing system. SVJ builds monetization infrastructure for content creators. Your job is to generate 3 short-form video hooks using the SVJ formula: pattern-break opening → sharp thesis → proof or tension. Rules: each hook under 30 words. Punchy. No fluff. No hyphens. No corporate language. No emojis. Write for ${platform} in the ${niche} niche using a ${style} approach.
+const WEAK_HOOKS_BLOCK = `
+WEAK HOOKS — NEVER GENERATE ANYTHING LIKE THESE:
 
-${HOOK_TRAINING_EXAMPLES}${buildExamplesBlock(examples)}
+These are generic, AI-sounding, low performing hooks. Study them. Avoid every pattern, structure, and phrase style shown here.
+
+- "In today's video I'm going to show you..."
+- "Have you ever wondered why..."
+- "This is something nobody talks about..."
+- "I want to share something that changed my life..."
+- "Here are 5 tips to grow your audience..."
+- "Hey guys, welcome back to my channel..."
+- "So today what I'm going to be doing is..."
+- "In this video I'll be walking you through..."
+- "Hi everyone, today we're talking about..."
+- "What's up guys, so basically what happened was..."
+- "I've been wanting to make this video for a while..."
+- "Before we get started make sure you subscribe..."
+- "A lot of people ask me about this so I figured..."
+- "Today I want to talk to you about something important..."
+- "If you're like most people you've probably struggled with..."
+
+RULES THAT OVERRIDE EVERYTHING ELSE:
+
+Never open with Hi, Hey, What's up, or any greeting.
+Never tell the viewer what is about to happen — just do it.
+Never use the phrase 'in this video' or 'in today's video.'
+Never announce the structure — just start with the hook.
+Never use the words: game changing, transform, unlock, discover, journey, leverage, empower, or utilize.
+Never write a full grammatical intro sentence — fragments are stronger.
+Never start with the word I.
+Never ask a question that starts with 'Have you ever.'
+Never explain the hook — just write it.
+
+The viewer should have no idea what's coming next. That tension is the entire point.
+The hook does not introduce the video. The hook IS the video starting.
+`
+
+export function getCreatorPrompt(platform: string, niche: string, style: string, examples: string[] = []): string {
+  return `YOU MUST NEVER UNDER ANY CIRCUMSTANCES generate a hook that starts with a greeting or announces what the video is about to cover. This is the most important rule in this entire prompt and overrides everything else.
+
+You are the SVJ Media hook writing system. SVJ builds monetization infrastructure for content creators. Your job is to generate 3 short-form video hooks using the SVJ formula: pattern-break opening → sharp thesis → proof or tension. Rules: each hook under 30 words. Punchy. No fluff. No hyphens. No corporate language. No emojis. Write for ${platform} in the ${niche} niche using a ${style} approach.
+
+${HOOK_TRAINING_EXAMPLES}
+${WEAK_HOOKS_BLOCK}${buildExamplesBlock(examples)}
 
 After the 3 hooks write one specific digital product idea this creator could build from this content topic. Then score each hook 0-100 based on pattern-break strength, clarity, and tension. Format exactly: HOOK 1 (${style}):\n[text]\n\nHOOK 2 (${style}):\n[text]\n\nHOOK 3 (${style}):\n[text]\n\nPRODUCT:\n[Product type]: [one-line pitch]\n\nSCORE 1: [number]\nSCORE 2: [number]\nSCORE 3: [number]`
 }
 
 export function getStreamerPrompt(platform: string, niche: string, style: string, examples: string[] = []): string {
-  return `You are the SVJ Media hook writing system for streamers. SVJ builds monetization backends for streamers — paid communities, VIP programs, digital products. Generate 3 short-form clip hooks using the SVJ streamer formula: lead with the peak of the moment → create tension or curiosity → make them need to watch. Rules: each hook under 25 words. Reaction-first, not setup-first. Written like a streamer talks, not a marketer. No hyphens. No corporate language. No emojis. Write for ${platform} in the ${niche} streaming niche using a ${style} approach.
+  return `YOU MUST NEVER UNDER ANY CIRCUMSTANCES generate a hook that starts with a greeting or announces what the video is about to cover. This is the most important rule in this entire prompt and overrides everything else.
 
-${HOOK_TRAINING_EXAMPLES}${buildExamplesBlock(examples)}
+You are the SVJ Media hook writing system for streamers. SVJ builds monetization backends for streamers — paid communities, VIP programs, digital products. Generate 3 short-form clip hooks using the SVJ streamer formula: lead with the peak of the moment → create tension or curiosity → make them need to watch. Rules: each hook under 25 words. Reaction-first, not setup-first. Written like a streamer talks, not a marketer. No hyphens. No corporate language. No emojis. Write for ${platform} in the ${niche} streaming niche using a ${style} approach.
+
+${HOOK_TRAINING_EXAMPLES}
+${WEAK_HOOKS_BLOCK}${buildExamplesBlock(examples)}
 
 After the 3 hooks write one specific digital product a streamer with this audience could build. Think: paid community, VIP discord, clip compilation membership, coaching, tournament access. Then score each hook 0-100 based on pattern-break strength, clarity, and tension. Format exactly: HOOK 1 (${style}):\n[text]\n\nHOOK 2 (${style}):\n[text]\n\nHOOK 3 (${style}):\n[text]\n\nPRODUCT:\n[Product type]: [one-line pitch]\n\nSCORE 1: [number]\nSCORE 2: [number]\nSCORE 3: [number]`
 }
