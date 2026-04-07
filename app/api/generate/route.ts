@@ -121,11 +121,24 @@ export async function POST(req: NextRequest) {
       }, { status: 429 })
     }
 
+    // ── Fetch top-rated hooks to use as few-shot examples ────────────────────
+    const { data: topHooks } = await supabase
+      .from('hooks')
+      .select('hook_text')
+      .eq('platform', platform)
+      .eq('niche', niche)
+      .eq('mode', mode)
+      .eq('rating', 1)
+      .order('created_at', { ascending: false })
+      .limit(5)
+
+    const examples = topHooks?.map((h: { hook_text: string }) => h.hook_text) ?? []
+
     // ── Call Anthropic ────────────────────────────────────────────────────────
     const systemPrompt =
       mode === 'streamer'
-        ? getStreamerPrompt(platform, niche, style)
-        : getCreatorPrompt(platform, niche, style)
+        ? getStreamerPrompt(platform, niche, style, examples)
+        : getCreatorPrompt(platform, niche, style, examples)
 
     const anthropic = getAnthropic()
     const message = await anthropic.messages.create({
