@@ -16,15 +16,11 @@ export async function POST(req: NextRequest) {
   const apiSecret = process.env.CONVERTKIT_API_SECRET
   const tagId = process.env.CONVERTKIT_TAG_ID
 
-  // Add directly as confirmed subscriber with tag — no confirmation email
-  const ckResponse = await fetch('https://api.convertkit.com/v3/subscribers', {
+  // Add as confirmed subscriber via tag endpoint — no confirmation email
+  const ckResponse = await fetch(`https://api.convertkit.com/v3/tags/${tagId}/subscribe`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      api_secret: apiSecret,
-      email,
-      tags: tagId ? [tagId] : [],
-    }),
+    body: JSON.stringify({ api_secret: apiSecret, email }),
   })
 
   if (!ckResponse.ok) {
