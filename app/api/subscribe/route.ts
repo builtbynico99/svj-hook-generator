@@ -13,58 +13,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
-  const apiKey = process.env.CONVERTKIT_API_KEY
-  const formId = process.env.CONVERTKIT_FORM_ID
+  const apiSecret = process.env.CONVERTKIT_API_SECRET
+  const tagId = process.env.CONVERTKIT_TAG_ID
 
-  // Subscribe to ConvertKit form
-  const ckResponse = await fetch(
-    `https://api.convertkit.com/v3/forms/${formId}/subscribe`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ api_key: apiKey, email }),
-    }
-  )
+  // Add directly as confirmed subscriber with tag — no confirmation email
+  const ckResponse = await fetch('https://api.convertkit.com/v3/subscribers', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      api_secret: apiSecret,
+      email,
+      tags: tagId ? [tagId] : [],
+    }),
+  })
 
   if (!ckResponse.ok) {
     const err = await ckResponse.text()
     console.error('ConvertKit subscribe error:', err)
-  } else {
-    // Tag the subscriber as hook-generator-lead
-    const ckData = await ckResponse.json()
-    const subscriberId = ckData?.subscription?.subscriber?.id
-
-    if (subscriberId) {
-      // Get or create the tag
-      const tagsRes = await fetch(
-        `https://api.convertkit.com/v3/tags?api_key=${apiKey}`
-      )
-      const tagsData = await tagsRes.json()
-      let tag = tagsData?.tags?.find(
-        (t: { name: string }) => t.name === 'hook-generator-lead'
-      )
-
-      if (!tag) {
-        const createTagRes = await fetch(
-          `https://api.convertkit.com/v3/tags`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ api_key: apiKey, tag: { name: 'hook-generator-lead' } }),
-          }
-        )
-        const createTagData = await createTagRes.json()
-        tag = createTagData?.tag
-      }
-
-      if (tag?.id) {
-        await fetch(`https://api.convertkit.com/v3/tags/${tag.id}/subscribe`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ api_key: apiKey, email }),
-        })
-      }
-    }
   }
 
   // Upsert user into Supabase
