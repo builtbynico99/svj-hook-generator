@@ -3,6 +3,68 @@ function buildExamplesBlock(examples: string[]): string {
   return `\n\nHIGH-PERFORMING HOOKS FROM REAL USERS (thumbs up rated — study and exceed these):\n${examples.map((h, i) => `${i + 1}. "${h}"`).join('\n')}\n\nDo not copy these. Extract what makes them work and write something stronger.`
 }
 
+const NICHE_LANGUAGE: Record<string, { native: string[]; avoid: string[] }> = {
+  // Creator niches
+  'Personal Finance': {
+    native: ['bag', 'stacking', 'broke', 'paycheck to paycheck', 'bread', 'debt', 'nine to five', 'side hustle', 'cash flow'],
+    avoid: ['epic', 'insane', 'bro', 'clip', 'W', 'no shot', 'chat'],
+  },
+  'Fitness / Health': {
+    native: ['gains', 'grind', 'PR', 'cut', 'bulk', 'shredded', 'natty', 'rep', 'form', 'fuel'],
+    avoid: ['leverage', 'monetize', 'bag', 'clip', 'W', 'bro (overused)', 'chat'],
+  },
+  'Lifestyle / Vlogging': {
+    native: ['real talk', 'lowkey', 'honestly', 'no cap', 'vibe', 'era', 'situationship', 'it girl', 'Roman Empire'],
+    avoid: ['leverage', 'optimize', 'monetize', 'grind', 'hustle culture', 'alpha'],
+  },
+  'Business / Entrepreneurship': {
+    native: ['rev share', 'retainer', 'client', 'churn', 'cold outreach', 'offer', 'niche down', 'cash collected', 'closer'],
+    avoid: ['epic', 'bro', 'clip', 'W', 'no shot', 'insane', 'chat'],
+  },
+  'Creator Economy': {
+    native: ['views', 'algorithm', 'thumbnail', 'hook rate', 'monetization', 'brand deal', 'CPM', 'viral', 'community'],
+    avoid: ['epic', 'leverage (corporate)', 'utilize', 'empower', 'synergy'],
+  },
+  'Gaming / Streaming': {
+    native: ['clip', 'no shot', 'actually insane', 'chat', 'W', 'sandbagging', 'trolling', 'diff', 'lowkey', 'ngl'],
+    avoid: ['leverage', 'monetize', 'optimize', 'passive income', 'transformation'],
+  },
+  // Streamer niches
+  'FPS / Competitive': {
+    native: ['cracked', 'no shot', 'diff', 'clip that', 'ez', 'wallbang', 'peeked', 'griefing', 'smurfing', 'actually insane'],
+    avoid: ['leverage', 'monetize', 'passive income', 'optimize', 'journey'],
+  },
+  'IRL / Variety': {
+    native: ['chat', 'W', 'L', 'based', 'lowkey', 'real', 'no cap', 'literally', 'caught in 4K', 'Pog'],
+    avoid: ['leverage', 'optimize', 'utilize', 'empower', 'transformation'],
+  },
+  'Sports': {
+    native: ['lock in', 'dawg', 'different breed', 'no cap', 'cooked', 'disrespect', 'sauce', 'buckets', 'glazing'],
+    avoid: ['leverage', 'monetize', 'optimize', 'passive income', 'epic'],
+  },
+  'Just Chatting': {
+    native: ['chat', 'real talk', 'no cap', 'lowkey', 'W', 'based', 'unhinged', 'chronically online', 'ratio'],
+    avoid: ['leverage', 'optimize', 'utilize', 'synergy', 'empower'],
+  },
+  'Roleplay / RPG': {
+    native: ['lore', 'NPC', 'griefer', 'meta', 'RP', 'immersion', 'broke character', 'main character', 'speedrun'],
+    avoid: ['leverage', 'monetize', 'passive income', 'epic (corporate)', 'optimize'],
+  },
+}
+
+function getNicheLanguageBlock(niche: string): string {
+  const data = NICHE_LANGUAGE[niche]
+  if (!data) return ''
+  return `
+NICHE LANGUAGE — ${niche.toUpperCase()}:
+These words and phrases feel native to this community. Use them naturally when they fit:
+${data.native.map(w => `- ${w}`).join('\n')}
+
+These words feel out of place in this niche. Never use them:
+${data.avoid.map(w => `- ${w}`).join('\n')}
+`
+}
+
 const WEAK_HOOKS_BLOCK = `
 WEAK HOOKS — NEVER GENERATE ANYTHING LIKE THESE:
 
@@ -46,6 +108,7 @@ export function getCreatorPrompt(platform: string, niche: string, style: string,
 You are the SVJ Media hook writing system. SVJ builds monetization infrastructure for content creators. Your job is to generate 3 short-form video hooks using the SVJ formula: pattern-break opening → sharp thesis → proof or tension. Rules: each hook under 30 words. Punchy. No fluff. No hyphens. No corporate language. No emojis. Write for ${platform} in the ${niche} niche using a ${style} approach.
 
 ${HOOK_TRAINING_EXAMPLES}
+${getNicheLanguageBlock(niche)}
 ${WEAK_HOOKS_BLOCK}${buildExamplesBlock(examples)}
 
 After the 3 hooks write one specific digital product idea this creator could build from this content topic. Then score each hook 0-100 based on pattern-break strength, clarity, and tension. Format exactly: HOOK 1 (${style}):\n[text]\n\nHOOK 2 (${style}):\n[text]\n\nHOOK 3 (${style}):\n[text]\n\nPRODUCT:\n[Product type]: [one-line pitch]\n\nSCORE 1: [number]\nSCORE 2: [number]\nSCORE 3: [number]`
@@ -57,6 +120,7 @@ export function getStreamerPrompt(platform: string, niche: string, style: string
 You are the SVJ Media hook writing system for streamers. SVJ builds monetization backends for streamers — paid communities, VIP programs, digital products. Generate 3 short-form clip hooks using the SVJ streamer formula: lead with the peak of the moment → create tension or curiosity → make them need to watch. Rules: each hook under 25 words. Reaction-first, not setup-first. Written like a streamer talks, not a marketer. No hyphens. No corporate language. No emojis. Write for ${platform} in the ${niche} streaming niche using a ${style} approach.
 
 ${HOOK_TRAINING_EXAMPLES}
+${getNicheLanguageBlock(niche)}
 ${WEAK_HOOKS_BLOCK}${buildExamplesBlock(examples)}
 
 After the 3 hooks write one specific digital product a streamer with this audience could build. Think: paid community, VIP discord, clip compilation membership, coaching, tournament access. Then score each hook 0-100 based on pattern-break strength, clarity, and tension. Format exactly: HOOK 1 (${style}):\n[text]\n\nHOOK 2 (${style}):\n[text]\n\nHOOK 3 (${style}):\n[text]\n\nPRODUCT:\n[Product type]: [one-line pitch]\n\nSCORE 1: [number]\nSCORE 2: [number]\nSCORE 3: [number]`
