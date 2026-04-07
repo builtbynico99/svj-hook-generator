@@ -7,9 +7,9 @@ import Image from 'next/image'
 const NAV_LINKS = [
   { href: '/generator', label: 'Generator' },
   { href: '/ab-tester', label: 'A/B Tester' },
+  { href: '/titles', label: 'YT Titles' },
   { href: '/scorer', label: 'Hook Scorer' },
   { href: '/vault', label: 'Vault' },
-  { href: '/titles', label: 'YT Titles' },
 ]
 
 export default function Nav() {
