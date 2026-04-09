@@ -9,7 +9,6 @@ export default function Home() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
-  const [submittedEmail, setSubmittedEmail] = useState('')
   const router = useRouter()
 
   useEffect(() => {
@@ -22,10 +21,9 @@ export default function Home() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!email) return
+    if (honeypot) return
     setLoading(true)
     setError('')
-
-    if (honeypot) return
 
     try {
       const res = await fetch('/api/subscribe', {
@@ -40,7 +38,6 @@ export default function Home() {
       }
 
       localStorage.setItem('svj_user_email', email)
-      setSubmittedEmail(email)
       setSubmitted(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.')
@@ -111,38 +108,38 @@ export default function Home() {
               <p className="mt-4 text-[#9CA3AF] text-xs text-center">
                 Free forever. No spam. SVJ Media.
               </p>
-              <p className="mt-2 text-[#555555] text-xs text-center">
-                Check your inbox — ConvertKit will send you a confirmation email. Click it to stay on the list.
-              </p>
             </>
           ) : (
-            <>
-              <div className="mb-6">
-                <div className="w-8 h-8 rounded-full bg-[#2563EB] flex items-center justify-center mb-5">
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M3 8L6.5 11.5L13 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-                <h2 className="text-2xl font-bold text-white mb-2">You're in.</h2>
-                <p className="text-[#9CA3AF] text-sm leading-relaxed">
-                  Access saved to <span className="text-white font-medium">{submittedEmail}</span> on this browser.
-                </p>
-              </div>
+            <div className="flex flex-col items-center text-center">
+              {/* Checkmark icon */}
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none" className="mb-6">
+                <circle cx="24" cy="24" r="22" stroke="#2563EB" strokeWidth="2" />
+                <path d="M15 24L21 30L33 18" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
 
-              <div className="bg-[#111111] border border-[#222222] rounded-[8px] px-4 py-4 mb-6 space-y-2">
-                <p className="text-white text-sm font-medium">Before you continue:</p>
-                <p className="text-[#9CA3AF] text-sm leading-relaxed">
-                  Bookmark this page now. Your access is automatic on this browser — but if you open a new browser or device, you will need to re-enter <span className="text-white">{submittedEmail}</span> to get back in.
-                </p>
-              </div>
+              <h2 className="text-[22px] font-bold text-white mb-4">
+                Check your email.
+              </h2>
+
+              <p className="text-[#9CA3AF] text-sm leading-[1.7] max-w-[420px] mb-8">
+                We just sent you a welcome message. Before you start generating hooks, do one thing — find that email and move it to your Primary inbox.
+                <br /><br />
+                If it landed in Promotions or Spam, drag it to Primary. This makes sure you never miss updates, new features, or anything else we send from SVJ.
+                <br /><br />
+                It takes 10 seconds and it matters.
+              </p>
 
               <button
                 onClick={() => router.push('/generator')}
-                className="w-full bg-white text-black font-semibold py-3 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors"
+                className="w-full sm:w-auto bg-white text-black font-semibold px-6 py-[10px] rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors"
               >
-                Go to generator ↗
+                Take me to the generator
               </button>
-            </>
+
+              <p className="mt-4 text-[#555555] text-xs">
+                Didn't get the email? Check your spam folder or make sure you entered the right address.
+              </p>
+            </div>
           )}
 
         </div>
