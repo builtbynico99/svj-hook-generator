@@ -122,11 +122,11 @@ export default function Home() {
               </h2>
 
               <p className="text-[#9CA3AF] text-sm leading-[1.7] max-w-[420px] mb-8">
-                We just sent you a welcome message. Before you start generating hooks, do one thing — find that email and move it to your Primary inbox.
+                We sent you an email on how to use the hook generator better than 99% of people and get the best results out of every session.
                 <br /><br />
-                If it landed in Promotions or Spam, drag it to Primary. This makes sure you never miss updates, new features, or anything else we send from SVJ.
+                Before you open the tool, read it. It takes two minutes and it changes how you use everything here.
                 <br /><br />
-                It takes 10 seconds and it matters.
+                If it landed in Promotions or Spam, move it to Primary so you don't miss it.
               </p>
 
               <button
