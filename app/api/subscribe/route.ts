@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
-  const { email, website } = await req.json()
+  const { email, website, signup_source } = await req.json()
 
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 })
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   // Step 3: Upsert user into Supabase
   const supabase = getSupabase()
   const { error } = await supabase.from('users').upsert(
-    { email, convertkit_tagged: true },
+    { email, convertkit_tagged: true, signup_source: signup_source || 'direct' },
     { onConflict: 'email' }
   )
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { trackEvent } from '@/lib/gtag'
 
 export default function Home() {
   const [email, setEmail] = useState('')
@@ -15,7 +16,16 @@ export default function Home() {
     const stored = localStorage.getItem('svj_user_email')
     if (stored) {
       router.replace('/generator')
+      return
     }
+    // Capture UTM params and store in localStorage
+    const params = new URLSearchParams(window.location.search)
+    const source = params.get('utm_source')
+    const medium = params.get('utm_medium')
+    const campaign = params.get('utm_campaign')
+    if (source) localStorage.setItem('utm_source', source)
+    if (medium) localStorage.setItem('utm_medium', medium)
+    if (campaign) localStorage.setItem('utm_campaign', campaign)
   }, [router])
 
   async function handleSubmit(e: React.FormEvent) {
@@ -26,10 +36,12 @@ export default function Home() {
     setError('')
 
     try {
+      const signupSource = localStorage.getItem('utm_source') || 'direct'
+
       const res = await fetch('/api/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, website: honeypot }),
+        body: JSON.stringify({ email, website: honeypot, signup_source: signupSource }),
       })
 
       if (!res.ok) {
@@ -38,6 +50,10 @@ export default function Home() {
       }
 
       localStorage.setItem('svj_user_email', email)
+      trackEvent('email_signup', {
+        event_category: 'conversion',
+        event_label: 'hook_generator_signup',
+      })
       setSubmitted(true)
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Something went wrong. Try again.')

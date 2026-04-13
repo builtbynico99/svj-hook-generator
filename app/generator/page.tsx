@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Nav from '@/components/Nav'
 import { triggerCopyAnimation } from '@/lib/copyAnimation'
 import NicheDropdown from '@/components/NicheDropdown'
+import { trackEvent } from '@/lib/gtag'
 
 type Mode = 'creator' | 'streamer'
 type Hook = { id: string; type: string; text: string; score: number }
@@ -137,6 +138,7 @@ export default function Generator() {
         throw new Error(data.error || 'Generation failed')
       }
       const data = await res.json()
+      trackEvent('hook_generated', { event_category: 'engagement', event_label: 'hook_generation' })
       setHooks(data.hooks)
       setProductInsight(data.productInsight)
       setTotalGenerations((prev) => prev + 1)
@@ -329,6 +331,7 @@ export default function Generator() {
               href="https://svjmedia.com"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackEvent('academy_cta_click', { event_category: 'upsell', event_label: 'svj_academy' })}
               className="inline-block bg-white text-black text-xs font-semibold px-4 py-2.5 rounded-[8px] hover:bg-[#E5E7EB] transition-colors"
             >
               Join SVJ Academy — free
@@ -570,6 +573,7 @@ export default function Generator() {
                 The community where creators compare what is working, share hooks that converted, and get feedback from the SVJ team.
               </p>
               <a href="https://svjmedia.com" target="_blank" rel="noopener noreferrer"
+                onClick={() => trackEvent('academy_cta_click', { event_category: 'upsell', event_label: 'svj_academy' })}
                 className="inline-block bg-white text-black text-xs font-semibold px-4 py-2 rounded-[8px] hover:bg-[#E5E7EB] transition-colors">
                 Join SVJ Academy
               </a>
@@ -587,6 +591,7 @@ export default function Generator() {
                 The full SVJ monetization framework. Community architecture, funnel logic, product positioning. Self-paced, yours forever.
               </p>
               <a href="https://svjmedia.com" target="_blank" rel="noopener noreferrer"
+                onClick={() => trackEvent('blueprint_cta_click', { event_category: 'upsell', event_label: 'blueprint_97' })}
                 className="inline-block bg-white text-black text-xs font-semibold px-4 py-2 rounded-[8px] hover:bg-[#E5E7EB] transition-colors text-center">
                 Get the Blueprint
               </a>
