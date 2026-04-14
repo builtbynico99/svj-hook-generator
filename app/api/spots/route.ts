@@ -37,9 +37,8 @@ export async function GET() {
   }
 
   const spots_remaining = Math.max(0, (data.spots_limit ?? 20) - (data.spots_taken ?? 0))
-  return NextResponse.json({
-    spots_taken: data.spots_taken,
-    spots_limit: data.spots_limit,
-    spots_remaining,
-  })
+  return NextResponse.json(
+    { spots_taken: data.spots_taken, spots_limit: data.spots_limit, spots_remaining },
+    { headers: { 'Cache-Control': 'no-store, no-cache, must-revalidate' } }
+  )
 }
