@@ -1,36 +1,51 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
 
 export async function POST() {
-  // Use service role key to guarantee write permissions
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  const key = serviceKey || anonKey
+
+  console.log('[increment] url:', url ? 'set' : 'MISSING', 'serviceKey:', serviceKey ? 'set' : 'MISSING')
+
+  // Get the latest row
+  const getRes = await fetch(
+    `${url}/rest/v1/weekly_spots?select=week_start,spots_taken&order=week_start.desc&limit=1`,
+    {
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+    }
   )
 
-  const { data: row, error: fetchError } = await supabase
-    .from('weekly_spots')
-    .select('week_start, spots_taken')
-    .order('week_start', { ascending: false })
-    .limit(1)
-    .single()
+  const rows = await getRes.json()
+  console.log('[increment] rows:', JSON.stringify(rows))
 
-  if (fetchError || !row) {
-    console.error('[increment] no row found:', fetchError)
-    return NextResponse.json({ success: false, error: 'No spots row found' })
+  if (!rows || rows.length === 0) {
+    return NextResponse.json({ success: false, error: 'No row found' })
   }
 
+  const row = rows[0]
   const newCount = (row.spots_taken ?? 0) + 1
-  const { error: updateError } = await supabase
-    .from('weekly_spots')
-    .update({ spots_taken: newCount })
-    .eq('week_start', row.week_start)
 
-  if (updateError) {
-    console.error('[increment] update error:', updateError)
-    return NextResponse.json({ success: false })
-  }
+  const patchRes = await fetch(
+    `${url}/rest/v1/weekly_spots?week_start=eq.${row.week_start}`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: key,
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({ spots_taken: newCount }),
+    }
+  )
 
-  console.log('[increment] spots_taken updated to:', newCount, 'for week:', row.week_start)
-  return NextResponse.json({ success: true })
+  const patchResult = await patchRes.json()
+  console.log('[increment] patch status:', patchRes.status, 'result:', JSON.stringify(patchResult))
+
+  return NextResponse.json({ success: patchRes.ok, status: patchRes.status })
 }
