@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabase } from '@/lib/supabase'
 
 function getMondayUTC(): string {
   const now = new Date()
@@ -11,35 +11,35 @@ function getMondayUTC(): string {
 }
 
 export async function POST() {
-  // Use service role key for atomic update
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
+  const supabase = getSupabase()
   const weekStart = getMondayUTC()
 
-  // Ensure row exists
-  await supabase
-    .from('weekly_spots')
-    .upsert({ week_start: weekStart, spots_taken: 0, spots_limit: 20 }, { onConflict: 'week_start' })
-
-  // Read then increment (simple and reliable)
-  const { data } = await supabase
+  // Get current row
+  const { data, error: fetchError } = await supabase
     .from('weekly_spots')
     .select('spots_taken')
     .eq('week_start', weekStart)
     .single()
 
-  if (data !== null) {
-    const { error } = await supabase
+  if (fetchError || !data) {
+    // Row doesn't exist — create it with spots_taken = 1
+    const { error: insertError } = await supabase
       .from('weekly_spots')
-      .update({ spots_taken: (data.spots_taken ?? 0) + 1 })
-      .eq('week_start', weekStart)
-
-    if (error) console.error('[increment] update error:', error)
-    else console.log('[increment] spots_taken now:', (data.spots_taken ?? 0) + 1)
+      .insert({ week_start: weekStart, spots_taken: 1, spots_limit: 20 })
+    if (insertError) console.error('[increment] insert error:', insertError)
+    else console.log('[increment] created row with spots_taken=1')
+    return NextResponse.json({ success: true })
   }
+
+  // Row exists — increment
+  const newCount = (data.spots_taken ?? 0) + 1
+  const { error: updateError } = await supabase
+    .from('weekly_spots')
+    .update({ spots_taken: newCount })
+    .eq('week_start', weekStart)
+
+  if (updateError) console.error('[increment] update error:', updateError)
+  else console.log('[increment] spots_taken updated to:', newCount)
 
   return NextResponse.json({ success: true })
 }
