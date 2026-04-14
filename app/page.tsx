@@ -61,6 +61,23 @@ export default function Home() {
     setError('')
 
     try {
+      // Check if this is a returning user — skip spots and go straight in
+      const checkRes = await fetch(`/api/check-user?email=${encodeURIComponent(email)}`)
+      const { exists } = await checkRes.json()
+
+      if (exists) {
+        localStorage.setItem('svj_user_email', email)
+        router.push('/generator')
+        return
+      }
+
+      // New user — check spots before subscribing
+      if (soldOut) {
+        setError('This week is full. Use the waitlist form below.')
+        setLoading(false)
+        return
+      }
+
       const signupSource = localStorage.getItem('utm_source') || 'direct'
 
       const res = await fetch('/api/subscribe', {
@@ -74,7 +91,7 @@ export default function Home() {
         throw new Error(data.error || 'Something went wrong')
       }
 
-      // Increment spots
+      // Increment spots for new signups only
       await fetch('/api/spots/increment', { method: 'POST' })
 
       localStorage.setItem('svj_user_email', email)
@@ -181,6 +198,31 @@ export default function Home() {
                   <p className="text-[#9CA3AF] text-sm leading-relaxed">
                     All 20 spots for this week have been taken. Drop your email below and you will be first in line when spots open again next Monday.
                   </p>
+                </div>
+
+                {/* Returning user re-entry */}
+                <form onSubmit={handleSubmit} className="flex flex-col gap-3 mb-4">
+                  <p className="text-[#9CA3AF] text-xs">Already have access? Enter your email to get back in.</p>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                    className="w-full bg-[#111111] border border-[#222222] text-white placeholder-[#9CA3AF] rounded-[8px] px-4 py-3 text-sm focus:outline-none focus:border-[#2563EB] transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-white text-black font-semibold py-3 rounded-[8px] text-sm hover:bg-[#E5E7EB] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Checking...' : 'Get back in'}
+                  </button>
+                  {error && <p className="text-red-400 text-sm">{error}</p>}
+                </form>
+
+                <div className="border-t border-[#222222] pt-4 mb-2">
+                  <p className="text-[#9CA3AF] text-xs mb-3">New here? Join the waitlist for next week.</p>
                 </div>
 
                 <form onSubmit={handleWaitlist} className="flex flex-col gap-3">
