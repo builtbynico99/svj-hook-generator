@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { getSupabase } from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 function getMondayUTC(): string {
   const now = new Date()
   const day = now.getUTCDay() // 0 = Sunday, 1 = Monday
