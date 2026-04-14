@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 function getMondayUTC(): string {
   const now = new Date()
@@ -11,32 +11,34 @@ function getMondayUTC(): string {
 }
 
 export async function POST() {
-  const supabase = getSupabase()
+  // Use service role key for atomic update
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const weekStart = getMondayUTC()
 
-  // Ensure row exists first
+  // Ensure row exists
   await supabase
     .from('weekly_spots')
     .upsert({ week_start: weekStart, spots_taken: 0, spots_limit: 20 }, { onConflict: 'week_start' })
 
-  // Atomic increment via raw SQL
-  const { error } = await supabase.rpc('increment_weekly_spots', { p_week_start: weekStart })
+  // Read then increment (simple and reliable)
+  const { data } = await supabase
+    .from('weekly_spots')
+    .select('spots_taken')
+    .eq('week_start', weekStart)
+    .single()
 
-  if (error) {
-    console.error('[increment] rpc error, falling back:', error)
-    // Fallback: read current then update
-    const { data } = await supabase
+  if (data !== null) {
+    const { error } = await supabase
       .from('weekly_spots')
-      .select('spots_taken')
+      .update({ spots_taken: (data.spots_taken ?? 0) + 1 })
       .eq('week_start', weekStart)
-      .single()
 
-    if (data) {
-      await supabase
-        .from('weekly_spots')
-        .update({ spots_taken: (data.spots_taken ?? 0) + 1 })
-        .eq('week_start', weekStart)
-    }
+    if (error) console.error('[increment] update error:', error)
+    else console.log('[increment] spots_taken now:', (data.spots_taken ?? 0) + 1)
   }
 
   return NextResponse.json({ success: true })
