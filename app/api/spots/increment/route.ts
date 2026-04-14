@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
-import { getSupabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export async function POST() {
-  const supabase = getSupabase()
+  // Use service role key to guarantee write permissions
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
 
-  // Find the most recent week row rather than computing Monday
   const { data: row, error: fetchError } = await supabase
     .from('weekly_spots')
     .select('week_start, spots_taken')
@@ -17,8 +20,6 @@ export async function POST() {
     return NextResponse.json({ success: false, error: 'No spots row found' })
   }
 
-  console.log('[increment] found row:', row.week_start, 'spots_taken:', row.spots_taken)
-
   const newCount = (row.spots_taken ?? 0) + 1
   const { error: updateError } = await supabase
     .from('weekly_spots')
@@ -27,9 +28,9 @@ export async function POST() {
 
   if (updateError) {
     console.error('[increment] update error:', updateError)
-  } else {
-    console.log('[increment] updated to:', newCount)
+    return NextResponse.json({ success: false })
   }
 
+  console.log('[increment] spots_taken updated to:', newCount, 'for week:', row.week_start)
   return NextResponse.json({ success: true })
 }
