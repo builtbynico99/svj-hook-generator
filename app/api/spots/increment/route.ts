@@ -14,23 +14,29 @@ export async function POST() {
   const supabase = getSupabase()
   const weekStart = getMondayUTC()
 
-  // Ensure row exists
+  // Ensure row exists first
   await supabase
     .from('weekly_spots')
     .upsert({ week_start: weekStart, spots_taken: 0, spots_limit: 20 }, { onConflict: 'week_start' })
 
-  // Read current value then increment
-  const { data } = await supabase
-    .from('weekly_spots')
-    .select('spots_taken')
-    .eq('week_start', weekStart)
-    .single()
+  // Atomic increment via raw SQL
+  const { error } = await supabase.rpc('increment_weekly_spots', { p_week_start: weekStart })
 
-  if (data) {
-    await supabase
+  if (error) {
+    console.error('[increment] rpc error, falling back:', error)
+    // Fallback: read current then update
+    const { data } = await supabase
       .from('weekly_spots')
-      .update({ spots_taken: (data.spots_taken ?? 0) + 1 })
+      .select('spots_taken')
       .eq('week_start', weekStart)
+      .single()
+
+    if (data) {
+      await supabase
+        .from('weekly_spots')
+        .update({ spots_taken: (data.spots_taken ?? 0) + 1 })
+        .eq('week_start', weekStart)
+    }
   }
 
   return NextResponse.json({ success: true })
