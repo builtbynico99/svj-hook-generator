@@ -190,7 +190,7 @@ export default function Home() {
             ) : (
               <>
                 <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4">
-                  Write hooks that stop the scroll.
+                  Write Top 1% Hooks in 10 Seconds
                 </h1>
 
                 <div className="bg-[#111111] border border-[#222222] rounded-[8px] px-4 py-4 mb-6">
@@ -257,10 +257,10 @@ export default function Home() {
             /* ── Normal state — spots available ────────────────────── */
             <>
               <h1 className="text-4xl sm:text-5xl font-bold text-white leading-tight mb-4">
-                Write hooks that stop the scroll.
+                Write Top 1% Hooks in 10 Seconds
               </h1>
               <p className="text-[#9CA3AF] text-base sm:text-lg leading-relaxed mb-6">
-                The free tool built on the SVJ short-form formula. Used by streamers and creators who are done leaving views on the table.
+                The free tool built on the SVJ short-form formula. Used by the Top 1% Streamers and Creators.
               </p>
 
               <div className="bg-[#111111] border border-[#222222] rounded-[8px] px-4 py-3 mb-6">
