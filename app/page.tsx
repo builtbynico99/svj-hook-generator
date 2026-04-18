@@ -137,7 +137,7 @@ export default function Home() {
     <main className="min-h-screen bg-[#0A0A0A] flex flex-col">
       {/* Top bar */}
       <div className="px-6 py-5">
-        <span className="text-white font-semibold text-sm tracking-wide">SVJ Media</span>
+        <img src="/svj-logo.png" alt="SVJ" style={{ height: 28, width: 'auto' }} />
       </div>
 
       {/* Center content */}
